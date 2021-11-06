@@ -1,11 +1,16 @@
 # SeekTruth.py : Classify text objects into two categories
 #
 # PLEASE PUT YOUR NAMES AND USER IDs HERE
+#Purnima Surve-pursurve
+#Teammembers:Tejaswy Ghanta-lghanta Shruthi Gutta-shrgutta
 #
 # Based on skeleton code by D. Crandall, October 2021
 #
-
+import re
 import sys
+import math
+import numpy as np
+
 
 def load_file(filename):
     objects=[]
@@ -17,6 +22,57 @@ def load_file(filename):
             objects.append(parsed[1] if len(parsed)>1 else "")
 
     return {"objects": objects, "labels": labels, "classes": list(set(labels))}
+
+
+def deceptive_vocabulary(train_data):                                                             #return a dictionary of unique words in deceptive reviews with their frequencies
+    split_string=[]
+    vocab_unique_words_decep = []
+    total=[]
+    for i in train_data["objects"]:
+        j=train_data["objects"].index(i)
+        total.append([w.lower() for w in re.split(r'[-.?!" ")(),390$4~125678]', i) if w])
+        if train_data["labels"][j] != "truthful":
+            split_string.append([w.lower() for w in re.split(r'[-.?!" ")(),390$4~125678]', i) if w])
+
+    dec_vocabularyy = [item for i in split_string for item in i]
+    vocab_unique_words_decep = list(dict.fromkeys(dec_vocabularyy))              # unique words in deceptive review
+    dict_deceptive = {}
+    for w in vocab_unique_words_decep:
+        reviews_w = 0                                                            # counter
+        for sentence in dec_vocabularyy:
+            if w in sentence:
+                reviews_w += 1
+        dict_deceptive[w.lower()] =reviews_w
+
+    return dict_deceptive
+
+def truthful_vocabulary(train_data):                                             #return a dictionary of unique words in truthful reviews with their frequencies
+    split_stringg=[]
+
+    for i in train_data["objects"]:
+        j=train_data["objects"].index(i)
+        if train_data["labels"][j] != "deceptive":
+            split_stringg.append([w.lower() for w in re.split(r'[-.?!" ")(),390$4~125678]', i) if w])
+
+    truth_vocabularyy = [item for i in split_stringg for item in i]
+    vocab_unique_words_truth = list(dict.fromkeys(truth_vocabularyy))
+    dict_truthful = {}
+    for w in vocab_unique_words_truth:
+        treviews_w = 0  # counter
+        for sentence in truth_vocabularyy:
+            if w in sentence:
+                treviews_w += 1
+        dict_truthful[w.lower()] = treviews_w
+    return dict_truthful
+
+
+def testwords(test_data):                                                                        #Cleans and splits the test dataset
+    total = []
+    for i in test_data["objects"]:
+        total.append([w.lower() for w in re.split(r'[-.?!" ")(),]390$4~125678', i) if w])
+    total1=[item.split() for i in total for item in i]
+
+    return total1
 
 # classifier : Train and apply a bayes net classifier
 #
@@ -33,8 +89,58 @@ def load_file(filename):
 #
 def classifier(train_data, test_data):
     # This is just dummy code -- put yours here!
-    return [test_data["classes"][0]] * len(test_data["objects"])
+    results=[]
+    a=1
+    count_decep = train_data["labels"].count("deceptive")  # number of deceptives in the training data
 
+    count_truth = train_data["labels"].count("truthful")   # number of truthfuls in the training data
+    count_total = count_decep + count_truth
+
+    Pr_d=count_decep/count_total                           #Probability(deceptive_review)
+    Pr_t=count_truth/count_total                            #Probability(true_review)
+    dec_vocfrq=deceptive_vocabulary(train_data)
+
+    true_vocfrq=truthful_vocabulary(train_data)
+
+    total_voc=len(dec_vocfrq)+len(true_vocfrq)
+
+    truthful_prob={}
+    deceptive_prob={}
+    for word in true_vocfrq.keys():
+        truthful_prob[word] = (true_vocfrq[word] + a) / (total_voc + 2)
+    for word in dec_vocfrq.keys():
+        deceptive_prob[word] = (dec_vocfrq[word] + a) / (total_voc + 2)
+    testwds=testwords(test_data)
+    reduced_words = []
+    for i in testwds:
+        words = []
+        for j in i:
+            if j in dec_vocfrq:
+                words.append(j)
+            elif j in true_vocfrq:
+                words.append(j)
+            else:
+                continue
+        reduced_words.append(words)
+
+    for i in range(len(reduced_words)):
+        likelihood_deceptive = 0
+        likelihood_truthful = 0
+        for word in reduced_words[i]:
+            if word not in deceptive_prob:
+                deceptive_prob[word]=0
+            elif word not in truthful_prob:
+                truthful_prob[word]=0
+            likelihood_deceptive += math.log(((deceptive_prob[word])*Pr_d +a)/(deceptive_prob[word]*Pr_d+ truthful_prob[word]*Pr_t+2))    #Using Bayes theorem
+            likelihood_truthful += math.log(((truthful_prob[word]) * Pr_t + a)/(deceptive_prob[word]*Pr_d+ truthful_prob[word]*Pr_t+2))
+        prob_dec_given_a_word = (likelihood_deceptive)
+        prob_truth_given_a_word = (likelihood_truthful)
+        if prob_truth_given_a_word> prob_dec_given_a_word :
+            results.append("truthful")
+        else :
+            results.append("deceptive")
+
+    return results
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:
@@ -48,6 +154,7 @@ if __name__ == "__main__":
     if(sorted(train_data["classes"]) != sorted(test_data["classes"]) or len(test_data["classes"]) != 2):
         raise Exception("Number of classes should be 2, and must be the same in test and training data")
 
+
     # make a copy of the test data without the correct labels, so the classifier can't cheat!
     test_data_sanitized = {"objects": test_data["objects"], "classes": test_data["classes"]}
 
@@ -56,3 +163,6 @@ if __name__ == "__main__":
     # calculate accuracy
     correct_ct = sum([ (results[i] == test_data["labels"][i]) for i in range(0, len(test_data["labels"])) ])
     print("Classification accuracy = %5.2f%%" % (100.0 * correct_ct / len(test_data["labels"])))
+
+
+
