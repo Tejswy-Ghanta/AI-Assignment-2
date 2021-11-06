@@ -33,9 +33,98 @@ class ComputerPlayer:
     #     issue game commands
     #   - quintris.get_board() returns the current state of the board, as a list of strings.
     #
+
+    def getPossibleMoves(self,lefts,rights,initial=''):
+        pos_l_pos = []
+        i=1
+        while i<=lefts:
+            pos_l_pos.append(initial+('b'*i))
+            i = i+1
+
+        pos_r_pos = []
+        j=1
+        while j<=rights:
+            pos_r_pos.append(initial+('m'*j))
+            j = j+1
+        pos_l_pos.reverse()
+        total_possible_moves = pos_l_pos+[''] +pos_r_pos
+
+        return total_possible_moves
+
     def get_moves(self, quintris):
         # super simple current algorithm: just randomly move left, right, and rotate a few times
-        return random.choice("mnbh") * random.randint(1, 10)
+
+        dummy_quintris = quintris
+        (cur_p,x_c,y_c) = dummy_quintris.get_piece()
+    
+        # Step1: Get all possible configurations 
+        pos_config = [{'c':[],'moves':[],'optimal_move':{'cost' : 0,'move' :''}},{'n':[],'moves':[],'optimal_move':{'cost' : 0,'move' :''}},{'nn':[],'moves':[],'optimal_move':{'cost' : 0,'move' :''}},{'nnn':[],'moves':[],'optimal_move':{'cost' : 0,'move' :''}},{'h':[],'moves':[],'optimal_move':{'cost' : 0,'move' :''}}]
+        # initial_board = quintris.get_board()
+
+        # 'c' case
+        pos_config[0]['c'] = cur_p
+        piece_len = len(cur_p[0])
+        lefts = y_c - 0
+        rights = 14 - (y_c + piece_len - 1)
+        pos_config[0]['moves'] = self.getPossibleMoves(lefts,rights) 
+        pos_config[0]['optimal_move']['cost'] = piece_len*10
+
+        # 'h' case
+        dummy_quintris.hflip()
+        (cur_p,x_c,y_c) = dummy_quintris.get_piece()
+        if(cur_p!=pos_config[0]['c']):
+            pos_config[4]['h'] = cur_p
+            piece_len = len(cur_p[0])
+            
+            lefts = y_c - 0
+            rights = 14 - (y_c + piece_len - 1)
+            pos_config[4]['moves'] = self.getPossibleMoves(lefts,rights,'h')
+            pos_config[4]['optimal_move']['cost'] = piece_len*10
+            dummy_quintris.hflip()
+
+        # 'n' case
+        dummy_quintris.rotate()
+        (cur_p,x_c,y_c) = dummy_quintris.get_piece()
+        if(cur_p!=pos_config[0]['c']):
+            pos_config[1]['n'] = cur_p
+            piece_len = len(cur_p[0])
+        
+            lefts = y_c - 0
+            rights = 14 - (y_c + piece_len - 1)
+            pos_config[1]['moves'] = self.getPossibleMoves(lefts,rights,'n')
+            pos_config[1]['optimal_move']['cost'] = piece_len*10
+
+        # 'nn' case
+        dummy_quintris.rotate()
+        (cur_p,x_c,y_c) = dummy_quintris.get_piece()
+        if(cur_p!=pos_config[0]['c']):
+            
+            pos_config[2]['nn'] = cur_p
+            piece_len = len(cur_p[0])
+            
+            lefts = y_c - 0
+            rights = 14 - (y_c + piece_len - 1)
+            pos_config[2]['moves'] = self.getPossibleMoves(lefts,rights,'nn')
+            pos_config[2]['optimal_move']['cost'] = piece_len*10
+
+        # 'nnn' case
+        dummy_quintris.rotate()
+        (cur_p,x_c,y_c) = dummy_quintris.get_piece()
+        if(cur_p!=pos_config[1]['n'] and cur_p!=pos_config[0]['c']):
+            
+            pos_config[3]['nnn'] = cur_p
+            piece_len = len(cur_p[0])
+        
+            lefts = y_c - 0
+            rights = 14 - (y_c + piece_len - 1)
+            pos_config[3]['moves'] = self.getPossibleMoves(lefts,rights,'nnn')
+            pos_config[3]['optimal_move']['cost'] = piece_len*10
+        dummy_quintris.rotate()
+        
+        # Step 2: Build max_player tree for each configuration 
+        # Step 3: Get the max value from the set 
+
+        return random.choice(pos_config[random.randint(0, 4)]['moves']) or 'll'
        
     # This is the version that's used by the animted version. This is really similar to get_moves,
     # except that it runs as a separate thread and you should access various methods and data in
@@ -88,6 +177,3 @@ try:
 
 except EndOfGame as s:
     print("\n\n\n", s)
-
-
-
