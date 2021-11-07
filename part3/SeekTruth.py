@@ -24,7 +24,7 @@ def load_file(filename):
     return {"objects": objects, "labels": labels, "classes": list(set(labels))}
 
 
-def deceptive_vocabulary(train_data):                                                             #return a dictionary of unique words in deceptive reviews with their frequencies
+def deceptive_vocabulary(train_data):                                                    #return a dictionary of unique words in deceptive reviews with their frequencies
     split_string=[]
     vocab_unique_words_decep = []
     total=[]
@@ -35,7 +35,7 @@ def deceptive_vocabulary(train_data):                                           
             split_string.append([w.lower() for w in re.split(r'[-.?!" ")(),390$4~125678]', i) if w])
 
     dec_vocabularyy = [item for i in split_string for item in i]
-    vocab_unique_words_decep = list(dict.fromkeys(dec_vocabularyy))              # unique words in deceptive review
+    vocab_unique_words_decep = list(dict.fromkeys(dec_vocabularyy))              # unique words in deceptive reviews
     dict_deceptive = {}
     for w in vocab_unique_words_decep:
         reviews_w = 0                                                            # counter
@@ -91,13 +91,13 @@ def classifier(train_data, test_data):
     # This is just dummy code -- put yours here!
     results=[]
     a=1
-    count_decep = train_data["labels"].count("deceptive")  # number of deceptives in the training data
+    count_decep = train_data["labels"].count("deceptive")  # no of deceptives in the data
 
-    count_truth = train_data["labels"].count("truthful")   # number of truthfuls in the training data
+    count_truth = train_data["labels"].count("truthful")  # no of truthfuls in the data
     count_total = count_decep + count_truth
 
-    Pr_d=count_decep/count_total                           #Probability(deceptive_review)
-    Pr_t=count_truth/count_total                            #Probability(true_review)
+    Pr_d=count_decep/count_total
+    Pr_t=count_truth/count_total
     dec_vocfrq=deceptive_vocabulary(train_data)
 
     true_vocfrq=truthful_vocabulary(train_data)
@@ -112,7 +112,7 @@ def classifier(train_data, test_data):
         deceptive_prob[word] = (dec_vocfrq[word] + a) / (total_voc + 2)
     testwds=testwords(test_data)
     reduced_words = []
-    for i in testwds:
+    for i in testwds:                                                            #filtering the words from the training data which are present in the test data
         words = []
         for j in i:
             if j in dec_vocfrq:
@@ -124,23 +124,23 @@ def classifier(train_data, test_data):
         reduced_words.append(words)
 
     for i in range(len(reduced_words)):
-        likelihood_deceptive = 0
-        likelihood_truthful = 0
+        likelihood_deceptive = 1
+        likelihood_true = 1
         for word in reduced_words[i]:
-            if word not in deceptive_prob:
-                deceptive_prob[word]=0
-            elif word not in truthful_prob:
-                truthful_prob[word]=0
-            likelihood_deceptive += math.log(((deceptive_prob[word])*Pr_d +a)/(deceptive_prob[word]*Pr_d+ truthful_prob[word]*Pr_t+2))    #Using Bayes theorem
-            likelihood_truthful += math.log(((truthful_prob[word]) * Pr_t + a)/(deceptive_prob[word]*Pr_d+ truthful_prob[word]*Pr_t+2))
-        prob_dec_given_a_word = (likelihood_deceptive)
-        prob_truth_given_a_word = (likelihood_truthful)
+            likelihood_true = likelihood_true * Decimal(
+                truthful_prob.get(word, a / (total_voc + 2)))
+            likelihood_deceptive = likelihood_deceptive * Decimal(
+                deceptive_prob.get(word, a / (total_voc + 2)))
+        prob_dec_given_a_word = (likelihood_deceptive) * Decimal(Pr_d)           #Using Bayes Theorem ignoring the denominator since both deceptive and truthful posterior
+                                                                                 # probabilities have the same denominator
+        prob_truth_given_a_word = (likelihood_true) * Decimal(Pr_t)
         if prob_truth_given_a_word> prob_dec_given_a_word :
             results.append("truthful")
         else :
             results.append("deceptive")
 
     return results
+
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:
