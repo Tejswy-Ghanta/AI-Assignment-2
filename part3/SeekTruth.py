@@ -10,7 +10,7 @@ import re
 import sys
 import math
 import numpy as np
-
+from decimal import Decimal
 
 def load_file(filename):
     objects=[]
