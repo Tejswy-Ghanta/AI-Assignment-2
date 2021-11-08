@@ -750,6 +750,7 @@ def raichu_up(board, N, player):
 
     return possible_successors
 
+#This function returns the list of all possible suiccessors of the given board
 def all_successors(board,N, player):
     a=[]
     value=[]
@@ -766,6 +767,7 @@ def all_successors(board,N, player):
         y.append(heuristic(i,player,N))       
     return a
 
+#This function checks for the end board
 def end(board):
     c_w,c_W,c_b,c_B,c_wr,c_br,n_w,n_b=0,0,0,0,0,0,0,0
     for i in range(N*N):
@@ -789,7 +791,8 @@ def end(board):
     if (c_w + c_W + c_wr)==0 or (c_b + c_B + c_br)==0:
         return True
 
-
+#This function returns the heuristic value of the board given by considering weights for each element
+#I have considered pichu as 250, pikachu as 500 and raichu as 2000
 def heuristic(successor,player,N):
     c_w,c_W,c_b,c_B,c_wr,c_br,n_w,n_b=0,0,0,0,0,0,0,0
     for i in range(N*N):
@@ -811,25 +814,23 @@ def heuristic(successor,player,N):
         if successor[i] =='$':
             c_br=c_br+1
     if player=='w':
-        value=(((c_w-c_b)*250) + ((c_W-c_B)*500) + ((c_wr-c_br)*1000))
+        value=(((c_w-c_b)*250) + ((c_W-c_B)*500) + ((c_wr-c_br)*2000))
     else:
-        value=(((c_b-c_w)*250) + ((c_B-c_W)*500) + ((c_br-c_wr)*1000))
-    # value=abs(((c_w-c_b)*250) + ((c_W-c_B)*500) + ((c_wr-c_br)*1000))
+        value=(((c_b-c_w)*250) + ((c_B-c_W)*500) + ((c_br-c_wr)*2000))
 
     return value
     
 
-
-def minimax(current_board,depth,alpha,beta,player):   
+#This function returns the minimum and maximum value of the board depending on the player
+def minimax(current_board,depth,alpha,beta,player,N):   
     x=copy.deepcopy(current_board)
     board=convert_liststr_to_str(current_board)
-    N=8
     if depth == 0: 
         return heuristic(list(board),'w',8)
     if player=='w': 
         value = -9999999
         for succ in all_successors(board,N,'w'):
-            maxeval=minimax(succ, (depth-1),alpha,beta,'b')
+            maxeval=minimax(succ, (depth-1),alpha,beta,'b',N)
             value=max(value,maxeval)
             alpha=max(alpha,maxeval)
             if beta <=alpha:
@@ -839,7 +840,7 @@ def minimax(current_board,depth,alpha,beta,player):
     elif player =='b':          
         value = 9999999
         for succ in all_successors(board,8,'b'):
-            mineval=minimax(succ, (depth-1),alpha,beta,'w')
+            mineval=minimax(succ, (depth-1),alpha,beta,'w',N)
             value=min(value, mineval)
             beta=min(beta,mineval)
             if beta<=alpha:
@@ -851,24 +852,21 @@ def minimax(current_board,depth,alpha,beta,player):
 # // initial call
 # minimax(currentPosition, 3, -∞, +∞, true)
                                                
-
+#This function finds the best possible move of the current board by calling the minimax function
 def find_best_move(board, N, player,timelimit):
     alpha=9999999
     beta=-9999999
     bestVal=-999999
     while True:
         for succ in all_successors(board,N,player):
-            # if len(succ)==0:
-            #     return board
-            # print(succ,'%')
             if player=='w':
-                moveVal = minimax(board,1,alpha,beta,'w')
+                moveVal = minimax(board,2,alpha,beta,'w',N)
                 if (moveVal > bestVal) :               
                     bestVal = moveVal
                     yield convert_liststr_to_str(flatten_list(succ))
             
             elif player=='b':
-                moveVal = minimax(board,2,alpha,beta,'b')
+                moveVal = minimax(board,2,alpha,beta,'b',N)
                 if (moveVal < bestVal) :               
                     bestVal = moveVal
                     yield convert_liststr_to_str(flatten_list(succ))
@@ -879,8 +877,7 @@ def find_best_move(board, N, player,timelimit):
 
 if __name__ == "__main__":
     if len(sys.argv) != 5:
-        raise Exception("Usage: Raichu.py N player board timelimit")
-        
+        raise Exception("Usage: Raichu.py N player board timelimit")   
     (_, N, player, board, timelimit) = sys.argv
     N=int(N)
     timelimit=int(timelimit)
