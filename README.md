@@ -39,6 +39,10 @@ Empty board with a falling piece
 
 A function that generates all the valid board moves for given piece configuration. It can be an exhaustive list of all 15^5 combinations.
 
+Heuristic function - 
+
+Stacking of pieces is weighed according to the combination that adds maximum length to the row. Rows are incrementally weighed from bottom to top of the board. Columns are incrementally weighed from right to left. Therefore, the stacking of pieces happens from right to left.
+
 (4)Algorithm design - 
 **ExpectiMax algorithm**
 
