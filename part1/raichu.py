@@ -812,11 +812,10 @@ def heuristic(successor,player,N):
     for i in range(N*N):
         if successor[i] =='$':
             c_br=c_br+1
-    # if player=='w':
-    #     value=(((c_w-c_b)*250) + ((c_W-c_B)*500) + ((c_wr-c_br)*1000))
-    # else:
-    #     value=(((c_b-c_w)*250) + ((c_B-c_W)*500) + ((c_br-c_wr)*1000))
-    value=abs(((c_w-c_b)*250) + ((c_W-c_B)*500) + ((c_wr-c_br)*1000))
+    if player=='w':
+        value=(((c_w-c_b)*250) + ((c_W-c_B)*500) + ((c_wr-c_br)*1000))
+    else:
+        value=(((c_b-c_w)*250) + ((c_B-c_W)*500) + ((c_br-c_wr)*1000))
     return value
     
 
@@ -849,9 +848,9 @@ def minimax(current_board,depth,alpha,beta,player):
                                                
 #This function decides the best possible next move by calling the minimax function
 def find_best_move(board, N, player,timelimit):
-    alpha=999999999
-    beta=-999999999
-    bestVal=-999999999
+    alpha=9999999
+    beta=-9999999
+    bestVal=-9999999
     while True:
         for succ in all_successors(board,N,player):
             if end(succ)
