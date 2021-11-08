@@ -792,7 +792,7 @@ def end(board):
         return True
 
 #This function returns the heuristic value of the board given by considering weights for each element
-#I have considered pichu as 250, pikachu as 500 and raichu as 2000
+#I have considered pichu as 300, pikachu as 800 and raichu as 2000
 def heuristic(successor,player,N):
     c_w,c_W,c_b,c_B,c_wr,c_br,n_w,n_b=0,0,0,0,0,0,0,0
     for i in range(N*N):
@@ -814,9 +814,9 @@ def heuristic(successor,player,N):
         if successor[i] =='$':
             c_br=c_br+1
     if player=='w':
-        value=(((c_w-c_b)*250) + ((c_W-c_B)*500) + ((c_wr-c_br)*2000))
+        value=(((c_w-c_b)*300) + ((c_W-c_B)*800) + ((c_wr-c_br)*2000))
     else:
-        value=(((c_b-c_w)*250) + ((c_B-c_W)*500) + ((c_br-c_wr)*2000))
+        value=(((c_b-c_w)*300) + ((c_B-c_W)*800) + ((c_br-c_wr)*2000))
 
     return value
     
