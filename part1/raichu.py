@@ -812,11 +812,11 @@ def heuristic(successor,player,N):
     for i in range(N*N):
         if successor[i] =='$':
             c_br=c_br+1
-    if player=='w':
-        value=(((c_w-c_b)*250) + ((c_W-c_B)*500) + ((c_wr-c_br)*1000))
-    else:
-        value=(((c_b-c_w)*250) + ((c_B-c_W)*500) + ((c_br-c_wr)*1000))
-#     value=abs(((c_w-c_b)*250) + ((c_W-c_B)*500) + ((c_wr-c_br)*1000))
+    # if player=='w':
+    #     value=(((c_w-c_b)*250) + ((c_W-c_B)*500) + ((c_wr-c_br)*1000))
+    # else:
+    #     value=(((c_b-c_w)*250) + ((c_B-c_W)*500) + ((c_br-c_wr)*1000))
+    value=abs(((c_w-c_b)*250) + ((c_W-c_B)*500) + ((c_wr-c_br)*1000))
     return value
     
 
@@ -856,13 +856,13 @@ def find_best_move(board, N, player,timelimit):
         for succ in all_successors(board,N,player):
             if end(succ)
             if player=='w':
-                moveVal = minimax(board,3,alpha,beta,'w')
+                moveVal = minimax(board,2,alpha,beta,'w')
                 if (moveVal > bestVal) :               
                     bestVal = moveVal
                     yield convert_liststr_to_str(flatten_list(succ))
             
             elif player=='b':
-                moveVal = minimax(board,3,alpha,beta,'b')
+                moveVal = minimax(board,2,alpha,beta,'b')
                 if (moveVal < bestVal) :               
                     bestVal = moveVal
                     yield convert_liststr_to_str(flatten_list(succ))
