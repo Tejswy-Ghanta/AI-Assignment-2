@@ -1,10 +1,13 @@
 # Simple quintris program! v0.2
 # D. Crandall, Sept 2021
+# lghanta, shrgutta, pursurve
 
 from AnimatedQuintris import *
 from SimpleQuintris import *
 from kbinput import *
 import time, sys
+import copy
+import re
 
 class HumanPlayer:
     def get_moves(self, quintris):
@@ -33,24 +36,70 @@ class ComputerPlayer:
     #     issue game commands
     #   - quintris.get_board() returns the current state of the board, as a list of strings.
     #
+    def __init__(self):
+        self.col_weights = [i*15 for i in range(1,16)]
+        self.row_weights = [j*25 for j in range(1,26)]
 
-    def getPossibleMoves(self,lefts,rights,initial=''):
+    # get all the possible Left, Right move strings given maximum possible moves
+    def getPossibleMoves(self,lefts,rights,extra_moves,initial=''):
         pos_l_pos = []
         i=1
         while i<=lefts:
-            pos_l_pos.append(initial+('b'*i))
+            pos_l_pos.append(extra_moves+initial+('b'*i))
             i = i+1
 
         pos_r_pos = []
         j=1
         while j<=rights:
-            pos_r_pos.append(initial+('m'*j))
+            pos_r_pos.append(extra_moves+initial+('m'*j))
             j = j+1
         pos_l_pos.reverse()
         total_possible_moves = pos_l_pos+[''] +pos_r_pos
 
         return total_possible_moves
 
+    def getUtilityValueOfMoves(self,successor,quintris):
+        cur_board = quintris.get_board()
+        cur_score = quintris.state[1]
+        quintris_to_play = copy.deepcopy(quintris)
+
+        for move in successor:
+            if move == 'b':
+                quintris_to_play.left()
+            elif move == 'n':
+                quintris_to_play.rotate()
+            elif move == 'h':
+                quintris_to_play.hflip()
+            elif move == 'm':
+                quintris_to_play.right() 
+        quintris_to_play.down()
+
+        new_score = quintris_to_play.state[1]
+
+        new_board = quintris_to_play.get_board()
+        new_piece_loc = []
+
+        #get the changed board rows
+        for i in range(len(cur_board)):
+            if cur_board[i]!=new_board[i]:
+                for j in range(len(cur_board[0])):
+                    if new_board[i][j] == 'x' and cur_board[i][j] == ' ':
+                        new_piece_loc.append([i,j])
+
+        # print(new_piece_loc)
+        c = 0
+        #add weights for the corresponding indices
+        for i in new_piece_loc:
+            c = c + self.col_weights[i[1]]+self.row_weights[i[0]]
+
+        if new_score > cur_score:
+            c = c*1000
+        return c
+
+    # def getGaps(move_str):
+    #     if(re.findall('/[x]* +[x]*/',move_str)):
+    #         return True
+        
     def get_moves(self, quintris):
         # super simple current algorithm: just randomly move left, right, and rotate a few times
 
@@ -58,73 +107,106 @@ class ComputerPlayer:
         (cur_p,x_c,y_c) = dummy_quintris.get_piece()
     
         # Step1: Get all possible configurations 
-        pos_config = [{'c':[],'moves':[],'optimal_move':{'cost' : 0,'move' :''}},{'n':[],'moves':[],'optimal_move':{'cost' : 0,'move' :''}},{'nn':[],'moves':[],'optimal_move':{'cost' : 0,'move' :''}},{'nnn':[],'moves':[],'optimal_move':{'cost' : 0,'move' :''}},{'h':[],'moves':[],'optimal_move':{'cost' : 0,'move' :''}}]
-        # initial_board = quintris.get_board()
+        # possible_config = ['','n','nn','nnn','h']
+        pos_config_pieces = [[] for _ in range(5)]
+        possible_moves = [[] for _ in range(5)]
+        
+        # to handle the piece cnfigurations if piece is towards right or left and all rotations/flips are not possible
+        extra_moves=''
+        max_l_w = max(len(cur_p[0]),len(cur_p))
+        if max_l_w > (14-y_c):
+          extra_moves='b'*max_l_w
 
-        # 'c' case
-        pos_config[0]['c'] = cur_p
+        elif max_l_w > (y_c-0):
+          extra_moves='m'*max_l_w
+
+        if(extra_moves!=''):
+            if(extra_moves.find('b')!=-1):
+                i = len(extra_moves)
+                while i!=0:
+                    dummy_quintris.left()
+                    i = i-1
+            elif(extra_moves.find('m')!=-1):
+                i = len(extra_moves)
+                while i!=0:
+                    dummy_quintris.right()
+                    i = i-1
+        # print(dummy_quintris.get_piece())
+        # '' given piece as is case
+        pos_config_pieces[0] = cur_p
         piece_len = len(cur_p[0])
         lefts = y_c - 0
         rights = 14 - (y_c + piece_len - 1)
-        pos_config[0]['moves'] = self.getPossibleMoves(lefts,rights) 
-        pos_config[0]['optimal_move']['cost'] = piece_len*10
+        possible_moves[0]= self.getPossibleMoves(lefts,rights,extra_moves) 
 
         # 'h' case
         dummy_quintris.hflip()
         (cur_p,x_c,y_c) = dummy_quintris.get_piece()
-        if(cur_p!=pos_config[0]['c']):
-            pos_config[4]['h'] = cur_p
+        if(cur_p!=pos_config_pieces[0]):
+            pos_config_pieces[4] = cur_p
             piece_len = len(cur_p[0])
             
             lefts = y_c - 0
             rights = 14 - (y_c + piece_len - 1)
-            pos_config[4]['moves'] = self.getPossibleMoves(lefts,rights,'h')
-            pos_config[4]['optimal_move']['cost'] = piece_len*10
+            possible_moves[4] = self.getPossibleMoves(lefts,rights,extra_moves,'h')
             dummy_quintris.hflip()
 
         # 'n' case
         dummy_quintris.rotate()
         (cur_p,x_c,y_c) = dummy_quintris.get_piece()
-        if(cur_p!=pos_config[0]['c']):
-            pos_config[1]['n'] = cur_p
+        if(cur_p!=pos_config_pieces[0]):
+            pos_config_pieces[1] = cur_p
             piece_len = len(cur_p[0])
         
             lefts = y_c - 0
             rights = 14 - (y_c + piece_len - 1)
-            pos_config[1]['moves'] = self.getPossibleMoves(lefts,rights,'n')
-            pos_config[1]['optimal_move']['cost'] = piece_len*10
+            possible_moves[1] = self.getPossibleMoves(lefts,rights,extra_moves,'n')
 
         # 'nn' case
         dummy_quintris.rotate()
         (cur_p,x_c,y_c) = dummy_quintris.get_piece()
-        if(cur_p!=pos_config[0]['c']):
-            
-            pos_config[2]['nn'] = cur_p
+        if(cur_p!=pos_config_pieces[0]):
+            pos_config_pieces[2] = cur_p
             piece_len = len(cur_p[0])
             
             lefts = y_c - 0
             rights = 14 - (y_c + piece_len - 1)
-            pos_config[2]['moves'] = self.getPossibleMoves(lefts,rights,'nn')
-            pos_config[2]['optimal_move']['cost'] = piece_len*10
+            possible_moves[2] = self.getPossibleMoves(lefts,rights,extra_moves,'nn')
 
         # 'nnn' case
         dummy_quintris.rotate()
         (cur_p,x_c,y_c) = dummy_quintris.get_piece()
-        if(cur_p!=pos_config[1]['n'] and cur_p!=pos_config[0]['c']):
-            
-            pos_config[3]['nnn'] = cur_p
+        if(cur_p!=pos_config_pieces[1] and cur_p!=pos_config_pieces[0]):
+            pos_config_pieces[3] = cur_p
             piece_len = len(cur_p[0])
         
             lefts = y_c - 0
             rights = 14 - (y_c + piece_len - 1)
-            pos_config[3]['moves'] = self.getPossibleMoves(lefts,rights,'nnn')
-            pos_config[3]['optimal_move']['cost'] = piece_len*10
+            possible_moves[3] = self.getPossibleMoves(lefts,rights,extra_moves,'nnn')
+            
         dummy_quintris.rotate()
-        
+        # print(pos_config_pieces)
+        # print(possible_moves)
+
         # Step 2: Build max_player tree for each configuration 
+        max_cost_piece = [[] for _ in range(5)]
+        max_cost = [0 for _ in range(5)]
+        
+        for i in range(len(possible_moves)):
+            max_c = 0
+            # print(i)
+            for j in possible_moves[i]:
+                # print(j)
+                c = self.getUtilityValueOfMoves(j,quintris)
+                # print('c - ',c,' max_c - ',max_c)
+                if( c > max_c):
+                    max_cost_piece[i] = j
+                    max_cost[i] = c
+                    max_c = c
+
         # Step 3: Get the max value from the set 
 
-        return random.choice(pos_config[random.randint(0, 4)]['moves']) or 'll'
+        return max_cost_piece[max_cost.index(max(max_cost))]
        
     # This is the version that's used by the animted version. This is really similar to get_moves,
     # except that it runs as a separate thread and you should access various methods and data in
@@ -140,18 +222,17 @@ class ComputerPlayer:
         # another super simple algorithm: just move piece to the least-full column
         while 1:
             time.sleep(0.1)
-
-            board = quintris.get_board()
-            column_heights = [ min([ r for r in range(len(board)-1, 0, -1) if board[r][c] == "x"  ] + [100,] ) for c in range(0, len(board[0]) ) ]
-            index = column_heights.index(max(column_heights))
-
-            if(index < quintris.col):
-                quintris.left()
-            elif(index > quintris.col):
-                quintris.right()
-            else:
-                quintris.down()
-
+            final_move = self.get_moves(quintris)
+            for move in final_move:
+                if move == 'b':
+                    quintris.left()
+                elif move == 'n':
+                    quintris.rotate()
+                elif move == 'h':
+                    quintris.hflip()
+                elif move == 'm':
+                    quintris.right()
+            quintris.down()
 
 ###################
 #### main program
