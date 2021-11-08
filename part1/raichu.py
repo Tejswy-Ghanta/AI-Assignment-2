@@ -750,6 +750,7 @@ def raichu_up(board, N, player):
 
     return possible_successors
 
+#This function returns list of all successors of the current state
 def all_successors(board,N, player):
     a=[]
     value=[]
@@ -766,6 +767,7 @@ def all_successors(board,N, player):
         y.append(heuristic(i,player,N))       
     return a
 
+#This function checks if all the elements of any player are killed 
 def end(board):
     c_w,c_W,c_b,c_B,c_wr,c_br,n_w,n_b=0,0,0,0,0,0,0,0
     for i in range(N*N):
@@ -789,7 +791,7 @@ def end(board):
     if (c_w + c_W + c_wr)==0 or (c_b + c_B + c_br)==0:
         return True
 
-
+#This function returns the heuristic value by giving weights to each element
 def heuristic(successor,player,N):
     c_w,c_W,c_b,c_B,c_wr,c_br,n_w,n_b=0,0,0,0,0,0,0,0
     for i in range(N*N):
@@ -810,16 +812,15 @@ def heuristic(successor,player,N):
     for i in range(N*N):
         if successor[i] =='$':
             c_br=c_br+1
-    if player=='w':
-        value=(((c_w-c_b)*250) + ((c_W-c_B)*500) + ((c_wr-c_br)*1000))
-    else:
-        value=(((c_b-c_w)*250) + ((c_B-c_W)*500) + ((c_br-c_wr)*1000))
-    # value=abs(((c_w-c_b)*250) + ((c_W-c_B)*500) + ((c_wr-c_br)*1000))
-
+    # if player=='w':
+    #     value=(((c_w-c_b)*250) + ((c_W-c_B)*500) + ((c_wr-c_br)*1000))
+    # else:
+    #     value=(((c_b-c_w)*250) + ((c_B-c_W)*500) + ((c_br-c_wr)*1000))
+    value=abs(((c_w-c_b)*250) + ((c_W-c_B)*500) + ((c_wr-c_br)*1000))
     return value
     
 
-
+#Minimax function returns min or max heuristic value based on minimum(b) or maximum(w) player
 def minimax(current_board,depth,alpha,beta,player):   
     x=copy.deepcopy(current_board)
     board=convert_liststr_to_str(current_board)
@@ -845,30 +846,23 @@ def minimax(current_board,depth,alpha,beta,player):
             if beta<=alpha:
                 break
         return value
-
-
- 
-# // initial call
-# minimax(currentPosition, 3, -∞, +∞, true)
                                                
-
+#This function decides the best possible next move by calling the minimax function
 def find_best_move(board, N, player,timelimit):
-    alpha=9999999
-    beta=-9999999
-    bestVal=-999999
+    alpha=999999999
+    beta=-999999999
+    bestVal=-999999999
     while True:
         for succ in all_successors(board,N,player):
-            # if len(succ)==0:
-            #     return board
-            # print(succ,'%')
+            if end(succ)
             if player=='w':
-                moveVal = minimax(board,1,alpha,beta,'w')
+                moveVal = minimax(board,3,alpha,beta,'w')
                 if (moveVal > bestVal) :               
                     bestVal = moveVal
                     yield convert_liststr_to_str(flatten_list(succ))
             
             elif player=='b':
-                moveVal = minimax(board,2,alpha,beta,'b')
+                moveVal = minimax(board,3,alpha,beta,'b')
                 if (moveVal < bestVal) :               
                     bestVal = moveVal
                     yield convert_liststr_to_str(flatten_list(succ))
@@ -879,20 +873,7 @@ def find_best_move(board, N, player,timelimit):
 
 if __name__ == "__main__":
     if len(sys.argv) != 5:
-        raise Exception("Usage: Raichu.py N player board timelimit")
-    # board='........W.W.W.W......w.w..................b.b.b..B.B.B.B........'
-    # print(board,'!!!!!!!!')
-    # N=8
-
-
-    # x=convertToMatrix(board,8)
-    # # print(x,'!!!!!!!')
-
-    # for i in (find_best_move(board, N, 'w')):
-    #     print(i)
-
-
-        
+        raise Exception("Usage: Raichu.py N player board timelimit")  
     (_, N, player, board, timelimit) = sys.argv
     N=int(N)
     timelimit=int(timelimit)
