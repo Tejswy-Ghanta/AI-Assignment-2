@@ -812,11 +812,11 @@ def heuristic(successor,player,N):
     for i in range(N*N):
         if successor[i] =='$':
             c_br=c_br+1
-    # if player=='w':
-    #     value=(((c_w-c_b)*250) + ((c_W-c_B)*500) + ((c_wr-c_br)*1000))
-    # else:
-    #     value=(((c_b-c_w)*250) + ((c_B-c_W)*500) + ((c_br-c_wr)*1000))
-    value=abs(((c_w-c_b)*250) + ((c_W-c_B)*500) + ((c_wr-c_br)*1000))
+    if player=='w':
+        value=(((c_w-c_b)*250) + ((c_W-c_B)*500) + ((c_wr-c_br)*1000))
+    else:
+        value=(((c_b-c_w)*250) + ((c_B-c_W)*500) + ((c_br-c_wr)*1000))
+#     value=abs(((c_w-c_b)*250) + ((c_W-c_B)*500) + ((c_wr-c_br)*1000))
     return value
     
 
