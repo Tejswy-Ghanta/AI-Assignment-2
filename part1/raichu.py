@@ -865,13 +865,13 @@ def find_best_move(board, N, player,timelimit):
                 moveVal = minimax(board,1,alpha,beta,'w')
                 if (moveVal > bestVal) :               
                     bestVal = moveVal
-                    yield succ
+                    yield convert_liststr_to_str(flatten_list(succ))
             
             elif player=='b':
                 moveVal = minimax(board,2,alpha,beta,'b')
                 if (moveVal < bestVal) :               
                     bestVal = moveVal
-                    yield succ
+                    yield convert_liststr_to_str(flatten_list(succ))
 
       
 
